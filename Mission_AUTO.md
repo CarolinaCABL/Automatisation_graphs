@@ -1,5 +1,7 @@
 # Automatisation de traitement de données INSEE
 
+
+``` r
 library(readxl)
 library(tidyverse)
 library(ggpubr)
@@ -7,12 +9,14 @@ library(scales)
 library(showtext)
 library(viridis)
 library(reshape2)
+```
 
-
+``` r
 setwd("X:/chemin vers le/dossier/avec les données")
 
+```
 
-## IMPORTATION DES DONNES 
+## Importation des données
 
 ``` r
 data_pop18 <- read_excel("bases_brutes/Données INSEE 2018/base-cc-evol-struct-pop-2018/base-cc-evol-struct-pop-2018.xlsx", 
@@ -27,7 +31,7 @@ data_hist18 <- read_excel("bases_brutes/Données INSEE 2018/base-cc-serie-histor
 intercoms <- read_excel("bases_brutes/Intercommunalite-Metropole_au_01-01-2020_v1.xlsx" , sheet = 2 , range = "A6:F34974") 
 ```
 
-## INDICATEURS POSSIBLES AVEC "base-cc-evol-struct-pop-2018" 
+## Indicateurs possibles avec la base "base-cc-evol-struct-pop-2018" 
 
 Nous pouvons obtenir différents indicateurs avec cette base de donnés. 
 Ces indicateurs peuvent être regroupés sous la catégorie "contexte démographique", qui est elle-même, divisée en deux sous-catégories:
@@ -49,7 +53,7 @@ Extraction des codes des communes de l'EPCI
 communes <- intercoms[intercoms$EPCI == codepci, c(1,2,3)]
 ``` 
 
-# 1.1 Traitement de données et création du tableau: Population par tranches 20XX.csv 
+## 1.1 Traitement de données et création du tableau: Population par tranches 20XX.csv 
  
 Dans cette première section, nous allons nous concentrer sur les informations permettant d'obtenir: 
 Population par tranches d'âge de l'EPCI (sans discrimination par sexe)
@@ -81,10 +85,11 @@ tranches_dage18[,-c(1,2)] <- lapply(tranches_dage18[,-c(1,2)], round, 1)
 tranches_dage13[,-c(1,2)] <- lapply(tranches_dage13[,-c(1,2)], round, 1)
 ``` 
 
-#Population par tranches pour l'epci complet
+### Population par tranches pour l'epci complet
+
+``` r
 popepci_tranches18 <- colSums(tranches_dage18[,-c(1,2)])
 popepci_tranches13 <- colSums(tranches_dage13[,-c(1,2)])
-
 
 #Nous allons annexer des colonnes avec les pourcentages para tranche d'âge, par commune.
 
@@ -113,12 +118,12 @@ EPCI_2018 <- c("-","EPCI", popepci_tranches18[1], popepci_tranches18[2], popepci
               popepci_tranches18[5]/popepci_tranches18[8], popepci_tranches18[6]/popepci_tranches18[8],
               popepci_tranches18[7]/popepci_tranches18[8])
 
-
 tranches_dage18 <- rbind(tranches_dage18,EPCI_2018)
 tranches_dage18[3:17] <- sapply(tranches_dage18[3:17], as.numeric)
+```
+Renommer et organiser les colonnes pour avoir plus de lisibilité:
 
-#Renommer et organiser les colonnes pour avoir plus de lisibilité:
-
+``` r
 tranches_dage18 <- tranches_dage18[, c(1,2,3,11,4,12,5,13,6,14,7,15,8,16,9,17,10)]
 tranches_dage13 <- tranches_dage13[, c(1,2,3,11,4,12,5,13,6,14,7,15,8,16,9,17,10)]
 
@@ -131,46 +136,37 @@ colnames(tranches_dage13) <- c("Code INSEE","Echelle","0_14 ans","%I","15_29 ans
                                "%II","30_44 ans","%III","45_59 ans","%IV",
                                "60_74 ans","%V","75_89 ans","%VI",
                                "90 ans ou plus","%VII","Ensemble")
+```
 
-
-#(EX) Exportation en csv.
+### Exportation en csv.
+``` r
 dir.create(paste0("bases/",codepci,sep=""))
 write_csv(tranches_dage13, paste0("bases/",codepci,"/","Population par Tranches 2013.csv"))
 write_csv(tranches_dage18, paste0("bases/",codepci,"/","Population par Tranches 2018.csv"))
+```
 
+# 1.2 Traitement de données et création du tableau: Sexe et âges 2013-2018.csv  
 
-#(ST):::::: Traitement de données et création du tableau: Sexe et âges 2013-2018.csv :::::# 
-
-
-#Dans cette deuxième section, nous allons nous concentrer sur les informations
-#permettant d'obtenir: L'évolution de la pyramide des âges 2013-2018.
-#Pour y parvenir, nous auront besoin des mêmes informations que ci-dessus, 
-#mais différenciées par sexe. 
-
+Dans cette deuxième section, nous allons nous concentrer sur les informations permettant d'obtenir: L'évolution de la pyramide des âges 2013-2018.
+Pour y parvenir, nous auront besoin des mêmes informations que ci-dessus, mais différenciées par sexe. 
+``` r
 info_hommes <- data_pop18[,c("CODGEO","P18_H0014", "P18_H1529","P18_H3044","P18_H4559",
                              "P18_H6074", "P18_H7589","P18_H90P","P18_POPH")]
 
+```
+Cette fois-ci, nous allons agréger les informations 2018 et 2013 dans le même tableaux car nous allons en avoir besoin, plus tard, dans le graphique de la pyramide d'âge. 
 
-#Cette fois-ci, nous allons agréger les informations 2018 et 2013 dans le même tableaux
-#car nous allons en avoir besoin, plus tard, dans le graphique de la pyramide d'âge. 
-
+``` r
 info_hommes <- merge(info_hommes, data_pop13[,c("CODGEO","P13_H0014", "P13_H1529","P13_H3044","P13_H4559",
                                                  "P13_H6074", "P13_H7589","P13_H90P","P13_POPH")], by = "CODGEO")
 
 
-## Maintenant, nous allons répéter les processus mais pour les femmes.
+## Maintenant, nous allons répéter les processus mais pour les femmes. [...]
+```
 
-info_femmes <- data_pop18[,c("CODGEO","P18_F0014", "P18_F1529","P18_F3044","P18_F4559",
-                             "P18_F6074", "P18_F7589","P18_F90P","P18_POPF")]
+Jusqu'ici nous avons séparé les information démographiques qui nous intéressent pour dessiner une pyramide d'âge. Cependant, ces informations sont pour la France entière. Comme avant nous allons fusionner les info d'intérêt et les communes d'intérêt. 
 
-info_femmes <- merge(info_femmes, data_pop13[,c("CODGEO","P13_F0014", "P13_F1529","P13_F3044","P13_F4559",
-                                                "P13_F6074", "P13_F7589","P13_F90P","P13_POPF")], by = "CODGEO")
-
-
-#Jusqu'ici nous avons séparé les information démographiques qui nous intéressent pour
-#dessiner une pyramide d'âge. Cependant, ces informations sont pour la France entière.
-#Comme avant nous allons fusionner les info d'intérêt et les communes d'intérêt. 
-
+``` r
 info_hommes <- merge(x = communes[,-3], y = info_hommes,
                          by.x = "CODGEO", by.y = "CODGEO", all.x = T, all.y = F)
 info_femmes <- merge(x = communes[,-3], y = info_femmes,
@@ -179,13 +175,12 @@ info_femmes <- merge(x = communes[,-3], y = info_femmes,
 #Nous allons arrondir les valeurs et conserver juste un décimal:
 info_hommes[,-c(1,2)] <- lapply(info_hommes[,-c(1,2)], round, 1)
 info_femmes[,-c(1,2)] <- lapply(info_femmes[,-c(1,2)], round, 1)
+```
 
+L'idée est de créer une pyramide pour chacune des communes de l'EPCI (et pour l'EPCI entière).
+Pour cela  nous allons réorganiser les données, en laissant les communes comme des colonnes et les informations par tranche d'âge comme lignes. Dans d'autres mots, on va a transposer la matrice info_hommes et la matrice info_femmes.
 
-#L'idée est de créer une pyramide pour chacune des communes de l'EPCI (et pour l'EPCI entière).Pour cela 
-#nous allons réorganiser les données, en laissant les communes comme des colonnes et 
-#les informations par tranche d'âge comme lignes.
-#Dans d'autres mots, on va a transposer la matrice info_hommes et la matrice info_femmes.
-
+``` r
 tinfo_hommes <- as.data.frame(t(info_hommes[,-c(1,2)]))
 
 #(!) On aura besoin de 4 colonnes: "Intercommunalité" = Somme de la population par tranche d'âge et sexe de toutes les communes de l'EPCI
@@ -193,55 +188,32 @@ tinfo_hommes <- as.data.frame(t(info_hommes[,-c(1,2)]))
 #                                  "Année" = Indiquant à quel année appartient l'info
 #                                  "Tranches" = Indiquant la tranche d'âge de l'information     
 
-
-
 tinfo_hommes$Intercommunalite <- rowSums(tinfo_hommes)
 tinfo_hommes$Sexe <- "Hommes"
 tinfo_hommes$Annee <- with(tinfo_hommes, ifelse(startsWith(rownames(tinfo_hommes), "P18"), "2018", "2013"))
 tinfo_hommes$Tranches <- c("0_14 ans","15_29 ans","30_44 ans","45_59 ans","60_74 ans","75_89 ans",
                            "90 ans ou plus","Ensemble")
 
-
 #Réorganisation et noms de colonnes.
 
 colnames(tinfo_hommes)[which(!names(tinfo_hommes)%in%c("Sexe","Intercommunalite","Annee","Tranches"))] <- info_hommes$LIBGEO
 tinfo_hommes <- tinfo_hommes[tinfo_hommes$Tranches != "Ensemble",]
 
+#Maintenant pour les femmes [...]
 
-#Maintenant pour les femmes: 
-
-tinfo_femmes <- as.data.frame(t(info_femmes[,-c(1,2)]))
-
-tinfo_femmes$Intercommunalite <- rowSums(tinfo_femmes)
-tinfo_femmes$Sexe <- "Femmes"
-tinfo_femmes$Annee <- ifelse(startsWith(rownames(tinfo_femmes), "P18"), "2018", "2013")
-tinfo_femmes$Tranches <- c("0_14 ans","15_29 ans","30_44 ans","45_59 ans","60_74 ans","75_89 ans",
-                           "90 ans ou plus","Ensemble")
-
-colnames(tinfo_femmes)[which(!names(tinfo_hommes)%in%c("Sexe", "Annee","Intercommunalite","Tranches"))] <- info_femmes$LIBGEO
-tinfo_femmes <- tinfo_femmes[tinfo_femmes$Tranches != "Ensemble",]
-
-
-#:: Jointure hommes et femmes:
+#Jointure hommes et femmes:
 
 info_pyramide <- bind_rows(tinfo_femmes,tinfo_hommes)
+```
 
-
-#(EX) Exportation en csv.
+### Exportation en csv.
+``` r
 write_csv(info_pyramide, paste0("bases/",codepci,"/","Sexe et âges 2013-2018.csv"))
+```
 
+# AUTOMATISATION DES GRAPHIQUES 
 
-#(!) Arrangement de valeur négatif pour les femmes
-
-info_pyramide[,!names(tinfo_hommes)%in%c("Sexe", "Annee","Tranches")] <- 
-  lapply(info_pyramide[,!names(tinfo_hommes)%in%c("Sexe", "Annee","Tranches")], function (x) ifelse(info_pyramide$Sexe == "Femmes",-x, x))
-
-
-
-#(ST):::::: Production de GRAPHIQUES ::::::#
-
-
-#Configuration pour plotter avec police Spectral et les couleurs Espacité
+Configuration pour plotter avec police Spectral et les couleurs de l'entreprise
 
 font_add_google("Spectral", "Spectral")
 windows()
@@ -249,19 +221,23 @@ showtext_auto()
 color <- c("#6E56A8","#7AF09E","#3B2E5A","#26D07C")
 
 
-## (GR) PYRAMIDE D'AGE
+## PYRAMIDE D'AGE
 
-#Création d'une boucle qui reproduit une pyramide d'âge pour chaque commune:
+### Création d'une boucle qui reproduit une pyramide d'âge pour chaque commune:
 
-#Création du dossier où les images seront stockées. 
+#### Création du dossier où les images seront stockées:
+
 dir.create(paste0("graphiques/",codepci,sep = ""))
 dir.create(paste0("graphiques/",codepci,"/pyramides",sep = ""))
 
-#Cette ligne est fondamental pour le sucés de la boucle. 
+Cette ligne est fondamental pour le sucés de la boucle car on veut conserver que les noms de communes parmi les autres informations: 
+``` r
 nom_communes <- colnames(info_pyramide)[!names(tinfo_hommes)%in%c("Sexe", "Annee","Tranches")]
+```
 
-#La boucle "for"
+#### La boucle "for"
 
+``` r
 for (c in nom_communes){
   
   info_pyramide$commune <- info_pyramide[, c]
@@ -295,26 +271,29 @@ for (c in nom_communes){
 
 
 showtext_auto(FALSE) 
+```
 
 
+## GRAPHIQUE: "Structure de la population par tranche d'âge en 2013-2018"
 
-## (GR) GRAPHIQUE: "Structure de la population par tranche d'âge en 2013-2018"
+### Préparation de la base de données
 
-#Préparation de la base de données
-
+``` r
 info_plotranches <- info_pyramide[,c("Intercommunalite","Sexe","Annee","Tranches")]
 info_plotranches$Intercommunalite <- abs(info_plotranches$Intercommunalite)
 
 info_plotranches <- aggregate(Intercommunalite ~ Annee + Tranches ,info_plotranches, sum)
 info_plotranches$Total <- ifelse(info_plotranches$Annee == "2013", sum(tranches_dage13$Ensemble), sum(tranches_dage18[-nrow(tranches_dage18),]$Ensemble))
 info_plotranches$Pourcentage <- info_plotranches$Intercommunalite / info_plotranches$Total
+```
 
-
-#Les couleurs
+Les couleurs
+``` r
 color <- c("#213F40","#26D07C")
+```
 
-
-#Le graphique
+### Le graphique
+``` r
 windows()
 showtext_auto()
 
@@ -334,36 +313,35 @@ showtext_auto(FALSE)
 
 ggsave(filename = paste("graphiques/",codepci,"/","pourcentages_tranches_EPCI.jpeg", sep = ""), 
        device = "jpeg", plot = plotranches, type = 'cairo',width = 11, height = 7, dpi = 100)
+```
 
 
 
-
-####################### INDICATEURS POSSIBLES AVEC "base-cc-serie-historique-2018" ###############################
-
-
-#(T)::::::::::::::  1. STRUCTURE URABAINE::::::::::::::#
+## Indicateurs possibles avec "base-cc-serie-historique-2018" 
 
 
-#(ST):::::::::: Densité des logements ::::::::::::#
+### 2. STRUCTURE URABAINE
 
-#Il convient de rappeler qu'au début, nous avons défini "communes" comme les communes de l'EPCI.
-#Si pour une raison ou une autre, dans cette deuxième partie, nous voulons travailler avec un autre EPCI,
-#nous devrons redéfinir "communes".
 
-#codepci = "nouveau code EPCI"
-#communes <- intercoms[intercoms$EPCI == codepci, c(1,2,3)]
+#### 2.1 Densité des logements 
 
+Il convient de rappeler qu'au début, nous avons défini "communes" comme les communes de l'EPCI. Si pour une raison ou une autre, dans cette deuxième partie, nous voulons travailler avec un autre EPCI, nous devrons redéfinir "communes".
+
+``` r
+codepci = "nouveau code EPCI"
+communes <- intercoms[intercoms$EPCI == codepci, c(1,2,3)]
+``` 
+
+``` r
 densite <- data_hist18[, c("CODGEO","SUPERF","D90_LOG","D99_LOG","P08_LOG","P13_LOG","P18_LOG")]
-
 
 #Juste pour l'EPCI d'intérêt.
 densite_logements <- merge(x = communes[,-3], y = densite,
                          by.x = "CODGEO", by.y = "CODGEO", all.x = T, all.y = F)
+``` 
 
-#Création des indicateurs: Logts par km^2, variation de logts et variation annuelle
-#Dans densite_logements nous avons déjà les informations qui nous intéressent, 
-#Donc, nous pouvons faire les calculs dans le tableau directement en utilisant la fonction mutate.
-
+_Création des indicateurs:_ Logts par km^2, variation de logts et variation annuelle. Dans densite_logements nous avons déjà les informations qui nous intéressent, donc, nous pouvons faire les calculs dans le tableau directement en utilisant la fonction mutate.
+``` r
 densite_logements <- mutate(densite_logements,
                             "Logts/Km2_1990" = D90_LOG/SUPERF,
                             "Logts/Km2_1999" = D99_LOG/SUPERF,
@@ -379,7 +357,6 @@ densite_logements <- mutate(densite_logements,
 
 densite_logements$Variation_annuelle = (((densite_logements[,13])/(densite_logements[,9]))^(1/28))-1
 
-
 #On change les noms des premiers colonnes
 colnames(densite_logements)[colnames(densite_logements) %in% 
                               c("CODGEO", "LIBGEO","SUPERF","D90_LOG","D99_LOG","P08_LOG","P13_LOG","P18_LOG")] <- 
@@ -388,11 +365,12 @@ colnames(densite_logements)[colnames(densite_logements) %in%
 
 #(EX) Exportation en csv.
 write_csv(densite_logements, paste0("bases/",codepci,"/","Densite_logements.csv"))
+``` 
 
 
+#### 2.2 Evolution du parc de logements
 
-#(ST):::::::::: Evolution du parc de logements ::::::::::::#
-
+``` r
 evop <- data_hist18[, c(1,28:59)]
 
 evol_parc <- merge(x = communes[,-3], y = evop,
@@ -410,11 +388,12 @@ colnames(evol_parc) <- c("Code INSEE", "Echelle","Logements 2018","Logements 201
 
 # (EX) Exportation en csv.
 write_csv(evol_parc, paste0("bases/",codepci,"/","Evolution parc de logements.csv"))
+``` 
 
+#### GRAPHIQUE: "Répartition du parc de logement"
 
-##(GR) GRAPHIQUE: "Répartition du parc de logement"
-
-#Réorganisation des données
+Réorganisation des données
+``` r
 residences2018 <- evol_parc[,c("Echelle","Logements 2018","Résid_ppales 2018","Résid_secondaires 2018","Logts_vacants 2018")]
 residences2018 <- mutate(residences2018,
                          "Logements vacantes" = residences2018[,5]/residences2018[,2],
@@ -424,9 +403,10 @@ residences2018 <- mutate(residences2018,
 residences2018[,-1] <- round(residences2018[,-1],2)
 residences2018 <- residences2018[, -c(2,3,4,5)]
 residences2018 <- melt(residences2018, id.vars = "Echelle", variable.name = "Logt")
+``` 
 
-
-#Graphique
+Graphique:
+``` r
 color <- c("#3b2e5a", "#7af09e","#26d07c")
 
 windows()
@@ -452,12 +432,12 @@ showtext_auto(FALSE)
 ggsave(filename = paste("graphiques/",codepci,"/","Repartition du parc de logement.jpeg", sep = ""), 
        device = "jpeg", plot = logts2018, type = 'cairo',width = 11, height = 7, dpi = 100)
 
+```
 
 
+#### 2.3 Densité de la population ::::::::::::#
 
-#(ST):::::::::: Densité de la population ::::::::::::#
-
-
+``` r
 dpop <- data_hist18[, c("CODGEO","SUPERF","D90_POP","D99_POP","P08_POP","P13_POP","P18_POP")]
 
 densite_pop <- merge(x = communes[,-3], y = dpop,
@@ -510,20 +490,21 @@ colnames(densite_pop)[c(1,2,3,4,5,6,7,8)] <- c("Code INSEE", "Echelle", "Superfi
 
 #(EX) Exportation en csv.
 write_csv(densite_pop, paste0("bases/",codepci,"/","Densité population.csv"))
+``` 
 
 
+# CONTEXTE DEMOGRAPHIQUE 
 
-#(T)::::::::::::::   CONTEXTE DEMOGRAPHIQUE ::::::::::::::#
+## Evolution démographique entre 1968 et 2018 
 
-#(ST):::::::::: Evolution démographique entre 1968 et 2018 ::::::::::::#
-
-
+``` r
 demoev <- data_hist18[, c(1,5:13)]
 evol_demo <- merge(x = communes[,-3], y = demoev, by.x = "CODGEO", by.y = "CODGEO", all.x = T, all.y = F )
-
+``` 
 
 ## Taux De Croissance Global Et Taux De Croissance Annuel
 
+``` r
 croissance_pop <- evol_demo[,c(1,2)]
 croissance_pop <- mutate(croissance_pop, 
                          "taux_glob_6875" = (evol_demo[,9] - evol_demo[,10])/evol_demo[,10] ,
@@ -550,18 +531,22 @@ croissance_pop <- mutate(croissance_pop,
 # (EX) Exportation
 write_csv(croissance_pop, paste0("bases/",codepci,"/","Taux global et annuel.csv"))
 
+``` 
 
-##(GR) GRAPHIQUE: Evolution démographiques 1968-2018.
+## GRAPHIQUE: Evolution démographiques 1968-2018.
 
-#Réorganisation des données
+Réorganisation des données
+
+``` r
 info_evdemo <- croissance_pop[,c(2,4,6,8,10,13,14,16)]
 colnames(info_evdemo) <- c("Communes","1968-75","1975-82","1982-90","1990-99","1999-08","2008-13","2013-18")
   
 info_evdemo <- melt(data = info_evdemo, id.vars = "Communes",variable.name= "Période")
-
+``` r
   
-#Graphique
+Graphique:
 
+``` r
 windows()
 showtext_auto()
 
@@ -584,11 +569,12 @@ ggsave(filename = paste("graphiques/",codepci,"/","Evol_demographiques_1968_2018
 
 
 showtext_auto(FALSE)
+``` 
 
 
+## Soldes naturelles et migratoires ::::::::::::#
 
-#(ST):::::::::: Soldes naturelles et migratoires ::::::::::::#
-
+``` r
 mig <- data_hist18[, c(1,5:13,14:27)]
 mig <- merge(x = communes[,-3], y = mig, by.x = "CODGEO", by.y = "CODGEO", all.x = T, all.y = F )
 
@@ -629,10 +615,13 @@ soldes_natu_et_mig <- soldes_natu_et_mig[, -c(3:24)]
 #(EX) Exportation en csv.
 write_csv(soldes_natu_et_mig, paste0("bases/",codepci,"/","Caractérisation de l'evolu de la pop entre 1968 et 2018.csv"))
 
+```
 
-## (GR) GRAPHIQUE: "Solde_naturel et solde_migratoire."
+## GRAPHIQUE: "Solde_naturel et solde_migratoire."
 
-#Réorganisation des données
+Réorganisation des données
+
+``` r
 sol <- soldes_natu_et_mig[,c(2,22,23)]
 colnames(sol) <- c("Echelle","Solde Naturel","Solde Migratoire")
 sol <- melt(sol, id.vars = "Echelle")
@@ -661,4 +650,4 @@ showtext_auto(FALSE)
 ggsave(filename = paste("graphiques/",codepci,"/","solde_naturel et solde_migratoire.jpeg", sep = ""), 
        device = "jpeg", plot = soldes, type = 'cairo',width = 11, height = 7, dpi = 100)
 
-
+``` 
