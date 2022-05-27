@@ -9,11 +9,12 @@ library(viridis)
 library(reshape2)
 
 
-setwd("X:/00-Outils traitement études/01 - INSEE/03_Scripts logiciel R")
+setwd("X:/chemin vers le/dossier/avec les données")
 
 
-####################### IMPORTATION DES DONNES ##############################
+## IMPORTATION DES DONNES 
 
+``` r
 data_pop18 <- read_excel("bases_brutes/Données INSEE 2018/base-cc-evol-struct-pop-2018/base-cc-evol-struct-pop-2018.xlsx", 
                                               range = "A6:DD34957")
 
@@ -24,59 +25,61 @@ data_hist18 <- read_excel("bases_brutes/Données INSEE 2018/base-cc-serie-histor
                                             range = "A6:DD34954")
 
 intercoms <- read_excel("bases_brutes/Intercommunalite-Metropole_au_01-01-2020_v1.xlsx" , sheet = 2 , range = "A6:F34974") 
+```
+
+## INDICATEURS POSSIBLES AVEC "base-cc-evol-struct-pop-2018" 
+
+Nous pouvons obtenir différents indicateurs avec cette base de donnés. 
+Ces indicateurs peuvent être regroupés sous la catégorie "contexte démographique", qui est elle-même, divisée en deux sous-catégories:
+
+1. Sexe et âge 2018
+2. Migrations résidentielles 
 
 
-####################### INDICATEURS POSSIBLES AVEC "base-cc-evol-struct-pop-2018" ###############################
+# 1. SEXE ET AGE 2018 - 2013 
 
+Compilation des informations pour l'EPCI
 
-#Nous pouvons obtenir différents indicateurs avec cette base de donnés. 
-#Ces indicateurs peuvent être regroupés sous la catégorie "contexte démographique", qui est elle-même, divisée en deux sous-catégories:
-
-#1. Sexe et âge 2018
-#2. Migrations résidentielles 
-
-
-
-#(T)::::::::::::::  1. SEXE ET AGE 2018 - 2013 ::::::::::::::#
-
-
-
-#Compilation des informations pour l'EPCI
+``` r
 codepci = "200057958"
+```
+Extraction des codes des communes de l'EPCI
 
-#Extraction des codes des communes de l'EPCI
+``` r
 communes <- intercoms[intercoms$EPCI == codepci, c(1,2,3)]
+``` 
 
-
-
-#(ST)::::::  Traitement de données et création du tableau: Population par tranches 20XX.csv ::::::# 
+# 1.1 Traitement de données et création du tableau: Population par tranches 20XX.csv 
  
+Dans cette première section, nous allons nous concentrer sur les informations permettant d'obtenir: 
+Population par tranches d'âge de l'EPCI (sans discrimination par sexe)
 
-#Dans cette première section, nous allons nous concentrer sur les informations permettant d'obtenir: 
-#Population par tranches d'âge de l'EPCI (sans discrimination par sexe)
 
+``` r
 info_ages18 <- data_pop18[,c("CODGEO","P18_POP0014", "P18_POP1529","P18_POP3044","P18_POP4559",
                            "P18_POP6074", "P18_POP7589","P18_POP90P","P18_POP")]
 
 info_ages13 <- data_pop13[,c("CODGEO","P13_POP0014", "P13_POP1529","P13_POP3044","P13_POP4559",
                              "P13_POP6074", "P13_POP7589","P13_POP90P","P13_POP")]
 
+```
 
-#Jusqu'ici nous avons les informations pour la France entière. Pourtant, ce qui nous intéresse sont 
-#les information pour une EPCI en particulière. Pour cela, nous allons faire une
-#jointure entre les info d'intérêt et les communes d'intérêt. Cela nous permettra de conserver
-#les informations que pour l'EPCI.
+Jusqu'ici nous avons les informations pour la France entière. Pourtant, ce qui nous intéresse sont les information pour une EPCI en particulière. Pour cela, nous allons faire une jointure entre les info d'intérêt et les communes d'intérêt. 
+Cela nous permettra de conserver les informations que pour l'EPCI.
 
+``` r
 tranches_dage18 <- merge(x = communes[,-3], y = info_ages18,
                        by.x = "CODGEO", by.y = "CODGEO", all.x = T)
 tranches_dage13 <- merge(x = communes[,-3], y = info_ages13,
                          by.x = "CODGEO", by.y = "CODGEO", all.x = T)
+``` 
 
+Nous allons arrondir les valeurs et conserver juste un décimal:
 
-#Nous allons arrondir les valeurs et conserver juste un décimal:
+``` r
 tranches_dage18[,-c(1,2)] <- lapply(tranches_dage18[,-c(1,2)], round, 1)
 tranches_dage13[,-c(1,2)] <- lapply(tranches_dage13[,-c(1,2)], round, 1)
-
+``` 
 
 #Population par tranches pour l'epci complet
 popepci_tranches18 <- colSums(tranches_dage18[,-c(1,2)])
