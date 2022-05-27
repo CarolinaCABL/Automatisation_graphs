@@ -272,7 +272,7 @@ for (c in nom_communes){
 
 showtext_auto(FALSE) 
 ```
-#### Example de résultat:
+#### Exemple de résultat:
 La boucle va générer le graphique suivant pour chacune des communes de l'EPCI. Si l'EPCI compose 100 communes, alors la boucle enregistrera 100 graphiques:
 
 
@@ -438,7 +438,9 @@ ggsave(filename = paste("graphiques/",codepci,"/","Repartition du parc de logeme
        device = "jpeg", plot = logts2018, type = 'cairo',width = 11, height = 7, dpi = 100)
 
 ```
+#### Exemple de résultat:
 
+<img src= https://github.com/CarolinaCABL/Automatisation_graphs/blob/main/parc_logemnts.jpg />
 
 #### 2.3 Densité de la population ::::::::::::#
 
@@ -575,7 +577,9 @@ ggsave(filename = paste("graphiques/",codepci,"/","Evol_demographiques_1968_2018
 
 showtext_auto(FALSE)
 ``` 
+#### Exemple de résultat:
 
+<img src= https://github.com/CarolinaCABL/Automatisation_graphs/blob/main/evol_demo.jpg />
 
 ## Soldes naturelles et migratoires ::::::::::::#
 
