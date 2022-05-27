@@ -272,6 +272,9 @@ for (c in nom_communes){
 
 showtext_auto(FALSE) 
 ```
+#### Example de résultat:
+La boucle va générer le graphique suivente pour chacune des communes de l'EPCI. Si l'EPCI compose 100 communes, alors la boucle enregistrera 100 graphiques comme le suivante: 
+<img src= https://github.com/CarolinaCABL/Automatisation_graphs/blob/main/pyramide.jpg />
 
 
 ## GRAPHIQUE: "Structure de la population par tranche d'âge en 2013-2018"
